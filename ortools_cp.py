@@ -1,4 +1,4 @@
-from ortools.linear_solver import pywraplp
+from ortools.sat.python import cp_model
 import os
 import time
 
@@ -15,8 +15,8 @@ def InputFile(filename):
 
 def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     """Giải bài toán phân công reviewer và ghi kết quả vào file output."""
-    solver = pywraplp.Solver.CreateSolver('SCIP')
-    if not solver:
+    model = cp_model.CpModel()
+    if not model:
         return
 
     # Khai báo biến chỉ cho các cặp (paper, reviewer) hợp lệ
@@ -24,38 +24,36 @@ def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     reviewer_papers = [[] for _ in range(m)]
     for i in range(n):
         for r in paper_prefs[i]:
-            x[i, r] = solver.IntVar(0, 1, f'x_{i}_{r}')
+            x[i, r] = model.NewBoolVar(f'x_{i}_{r}')
             reviewer_papers[r].append(i)
 
     # Biến tải tối đa
-    max_load = solver.IntVar(0, n, 'max_load')
+    max_load = model.NewIntVar(0, n, 'max_load')
 
     # Ràng buộc: mỗi paper có đúng b reviewer
     for i in range(n):
-        solver.Add(sum(x[i, r] for r in paper_prefs[i]) == b)
+        model.Add(sum(x[i, r] for r in paper_prefs[i]) == b)
 
     # Ràng buộc: max_load >= tải của mỗi reviewer
     for r in range(m):
         if reviewer_papers[r]:
-            solver.Add(max_load >= sum(x[i, r] for i in reviewer_papers[r]))
+            model.Add(max_load >= sum(x[i, r] for i in reviewer_papers[r]))
 
     # Mục tiêu: tối thiểu hóa tải tối đa
-    solver.Minimize(max_load)
-
-    # Giải bài toán
-    status = solver.Solve()
+    solver = cp_model.CpSolver()
+    status = solver.Solve(model)
 
     # Ghi kết quả vào file output
     with open(output_file, 'w') as f:
-        if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
             f.write(f"{str(output_file).split("\\")[-1]}\n")
             f.write(f"n = {n}\nm = {m}\n")
-            f.write(f"Objective Value: {int(max_load.solution_value())}\n")
+            f.write(f"Objective Value: {int(solver.value(max_load))}\n")
         else:
             f.write("No solution found.\n")
 
 def main():
-    """Hàm chính để chạy solver trên tất cả file .txt trong thư mục 'instances' và ghi kết quả vào 'results'."""
+    """Hàm chính để chạy model trên tất cả file .txt trong thư mục 'instances' và ghi kết quả vào 'results'."""
     # Lấy đường dẫn thư mục hiện tại
     current_dir = os.getcwd()
     instances_dir = os.path.join(current_dir, 'instances')
@@ -76,7 +74,7 @@ def main():
     # Xử lý từng file
     for filename in input_files:
         input_path = os.path.join(instances_dir, filename)
-        output_filename = f"[ILP_Ortools] {filename}"
+        output_filename = f"[CP_Ortools] {filename}"
         output_path = os.path.join(results_dir, output_filename)
         print(f"Đang xử lý file: {filename} -> {output_filename}")
         try:

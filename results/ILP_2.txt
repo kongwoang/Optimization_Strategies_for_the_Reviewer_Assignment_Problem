@@ -1,5 +1,0 @@
-ILP_2.txt
-n = 200
-m = 30
-Objective Value: 20
-118 ms

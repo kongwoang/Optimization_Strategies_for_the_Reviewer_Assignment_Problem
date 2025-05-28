@@ -1,5 +1,0 @@
-ILP_3.txt
-n = 700
-m = 70
-Objective Value: 30
-777 ms

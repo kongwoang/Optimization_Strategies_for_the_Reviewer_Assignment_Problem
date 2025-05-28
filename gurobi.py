@@ -1,4 +1,5 @@
-from ortools.linear_solver import pywraplp
+import gurobipy as gp
+from gurobipy import GRB
 import os
 import time
 
@@ -15,44 +16,52 @@ def InputFile(filename):
 
 def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     """Giải bài toán phân công reviewer và ghi kết quả vào file output."""
-    solver = pywraplp.Solver.CreateSolver('SCIP')
-    if not solver:
-        return
+    try:
+        # Tạo model Gurobi
+        model = gp.Model("reviewers_assignment")
 
-    # Khai báo biến chỉ cho các cặp (paper, reviewer) hợp lệ
-    x = {}
-    reviewer_papers = [[] for _ in range(m)]
-    for i in range(n):
-        for r in paper_prefs[i]:
-            x[i, r] = solver.IntVar(0, 1, f'x_{i}_{r}')
-            reviewer_papers[r].append(i)
+        # Tạo list các cặp (i, r) hợp lệ
+        valid_pairs = [(i, r) for i in range(n) for r in paper_prefs[i]]
 
-    # Biến tải tối đa
-    max_load = solver.IntVar(0, n, 'max_load')
+        # Khai báo biến x cho các cặp hợp lệ
+        x = model.addVars(valid_pairs, vtype=GRB.BINARY, name="x")
 
-    # Ràng buộc: mỗi paper có đúng b reviewer
-    for i in range(n):
-        solver.Add(sum(x[i, r] for r in paper_prefs[i]) == b)
+        # Khai báo biến max_load
+        max_load = model.addVar(vtype=GRB.INTEGER, name="max_load")
 
-    # Ràng buộc: max_load >= tải của mỗi reviewer
-    for r in range(m):
-        if reviewer_papers[r]:
-            solver.Add(max_load >= sum(x[i, r] for i in reviewer_papers[r]))
+        # Ràng buộc: mỗi paper có đúng b reviewer
+        for i in range(n):
+            model.addConstr(gp.quicksum(x[i, r] for r in paper_prefs[i]) == b)
 
-    # Mục tiêu: tối thiểu hóa tải tối đa
-    solver.Minimize(max_load)
+        # Tạo list reviewer_papers
+        reviewer_papers = [[] for _ in range(m)]
+        for i in range(n):
+            for r in paper_prefs[i]:
+                reviewer_papers[r].append(i)
 
-    # Giải bài toán
-    status = solver.Solve()
+        # Ràng buộc: max_load >= tải của mỗi reviewer
+        for r in range(m):
+            if reviewer_papers[r]:
+                model.addConstr(max_load >= gp.quicksum(x[i, r] for i in reviewer_papers[r]))
 
-    # Ghi kết quả vào file output
-    with open(output_file, 'w') as f:
-        if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
-            f.write(f"{str(output_file).split("\\")[-1]}\n")
-            f.write(f"n = {n}\nm = {m}\n")
-            f.write(f"Objective Value: {int(max_load.solution_value())}\n")
-        else:
-            f.write("No solution found.\n")
+        # Đặt mục tiêu: tối thiểu hóa max_load
+        model.setObjective(max_load, GRB.MINIMIZE)
+
+        # Giải model
+        model.optimize()
+
+        # Ghi kết quả vào file output
+        with open(output_file, 'w') as f:
+            if model.status == GRB.OPTIMAL:
+                f.write(f"{str(output_file).split("\\")[-1]}\n")
+                f.write(f"n = {n}\nm = {m}\n")
+                f.write(f"Objective Value: {int(max_load.x)}\n")
+            else:
+                f.write("No solution found.\n")
+    except gp.GurobiError as e:
+        print(f"Gurobi error: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 def main():
     """Hàm chính để chạy solver trên tất cả file .txt trong thư mục 'instances' và ghi kết quả vào 'results'."""
@@ -76,7 +85,7 @@ def main():
     # Xử lý từng file
     for filename in input_files:
         input_path = os.path.join(instances_dir, filename)
-        output_filename = f"[ILP_Ortools] {filename}"
+        output_filename = f"[ILP_gurobi] {filename}"
         output_path = os.path.join(results_dir, output_filename)
         print(f"Đang xử lý file: {filename} -> {output_filename}")
         try:
