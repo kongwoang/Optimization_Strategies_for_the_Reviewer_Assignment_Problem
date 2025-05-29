@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Adversarial_20000_9000_6.txt
+n = 20000
+m = 9000
+Objective Value: 34 FEASIBLE
+836491 ms

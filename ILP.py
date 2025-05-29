@@ -18,7 +18,7 @@ def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     solver = pywraplp.Solver.CreateSolver('SCIP')
     if not solver:
         return
-
+    solver.set_time_limit(600000)
     # Khai báo biến chỉ cho các cặp (paper, reviewer) hợp lệ
     x = {}
     reviewer_papers = [[] for _ in range(m)]
@@ -47,10 +47,14 @@ def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
 
     # Ghi kết quả vào file output
     with open(output_file, 'w') as f:
-        if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+        if status == pywraplp.Solver.OPTIMAL:
             f.write(f"{str(output_file).split("\\")[-1]}\n")
             f.write(f"n = {n}\nm = {m}\n")
-            f.write(f"Objective Value: {int(max_load.solution_value())}\n")
+            f.write(f"Objective Value: {int(max_load.solution_value())} OPTIMAL\n")
+        elif status == pywraplp.Solver.FEASIBLE:
+            f.write(f"{str(output_file).split("\\")[-1]}\n")
+            f.write(f"n = {n}\nm = {m}\n")
+            f.write(f"Objective Value: {int(max_load.solution_value())} FEASIBLE\n")     
         else:
             f.write("No solution found.\n")
 

@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Uniform_800_500_5.txt
+n = 800
+m = 500
+Objective Value: 8 OPTIMAL
+2847 ms

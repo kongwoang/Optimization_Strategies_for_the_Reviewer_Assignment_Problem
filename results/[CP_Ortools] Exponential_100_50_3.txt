@@ -1,0 +1,5 @@
+Exponential_100_50_3.txt
+n = 100
+m = 50
+Objective Value: 6 OPTIMAL
+87 ms

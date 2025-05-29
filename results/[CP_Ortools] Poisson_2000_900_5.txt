@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Poisson_2000_900_5.txt
+n = 2000
+m = 900
+Objective Value: 12 FEASIBLE
+600304 ms

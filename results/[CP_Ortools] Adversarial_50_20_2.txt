@@ -1,0 +1,5 @@
+Adversarial_50_20_2.txt
+n = 50
+m = 20
+Objective Value: 5 OPTIMAL
+16 ms
