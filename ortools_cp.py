@@ -41,14 +41,18 @@ def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     model.Minimize(max_load)
     # Mục tiêu: tối thiểu hóa tải tối đa
     solver = cp_model.CpSolver()
+    solver.parameters.max_time_in_seconds = 600
     status = solver.Solve(model)
-
     # Ghi kết quả vào file output
     with open(output_file, 'w') as f:
-        if status == cp_model.OPTIMAL or status == cp_model.FEASIBLE:
+        if status == cp_model.OPTIMAL:
             f.write(f"{str(output_file).split("\\")[-1]}\n")
             f.write(f"n = {n}\nm = {m}\n")
-            f.write(f"Objective Value: {int(solver.value(max_load))}\n")
+            f.write(f"Objective Value: {int(solver.value(max_load))} OPTIMAL\n")
+        elif status == cp_model.FEASIBLE:
+            f.write(f"{str(output_file).split("\\")[-1]}\n")
+            f.write(f"n = {n}\nm = {m}\n")
+            f.write(f"Objective Value: {int(solver.value(max_load))} FEASIBLE\n")
         else:
             f.write("No solution found.\n")
 
