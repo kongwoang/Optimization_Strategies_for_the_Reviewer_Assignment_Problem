@@ -38,7 +38,7 @@ def solve_reviewers_assignment_ilp(n, m, b, paper_prefs, output_file):
     for r in range(m):
         if reviewer_papers[r]:
             model.Add(max_load >= sum(x[i, r] for i in reviewer_papers[r]))
-
+    model.Minimize(max_load)
     # Mục tiêu: tối thiểu hóa tải tối đa
     solver = cp_model.CpSolver()
     status = solver.Solve(model)
