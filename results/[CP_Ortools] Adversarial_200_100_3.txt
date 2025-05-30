@@ -1,4 +1,4 @@
-/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Adversarial_200_100_3.txt
+Adversarial_200_100_3.txt
 n = 200
 m = 100
 Objective Value: 7 OPTIMAL

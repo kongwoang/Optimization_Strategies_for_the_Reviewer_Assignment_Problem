@@ -1,4 +1,4 @@
-/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Adversarial_800_500_5.txt
+Adversarial_800_500_5.txt
 n = 800
 m = 500
 Objective Value: 9 OPTIMAL

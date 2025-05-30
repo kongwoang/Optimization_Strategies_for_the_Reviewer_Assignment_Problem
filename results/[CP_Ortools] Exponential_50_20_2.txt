@@ -1,4 +1,4 @@
-/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Exponential_50_20_2.txt
+Exponential_50_20_2.txt
 n = 50
 m = 20
 Objective Value: 5 OPTIMAL

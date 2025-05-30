@@ -1,4 +1,4 @@
-/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Adversarial_5000_2000_6.txt
+Adversarial_5000_2000_6.txt
 n = 5000
 m = 2000
 Objective Value: 16 FEASIBLE
