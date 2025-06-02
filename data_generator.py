@@ -91,22 +91,26 @@ def gen_bait_and_trap(N, M, b, rare_group_size=5, rare_per_paper=1, common_pool_
 
 # ---------- Scenario Setup & Plotting ----------
 """
-        (50, 20,2),
-        (100, 50 , 3),
-        (200, 100, 3),
-        (500, 350, 4),
-        (800, 500, 5),
-        (1000, 700, 5),
-        (2000, 900, 5),
-        (5000, 2000, 6),
-        (10000, 4000, 6),
-        (20000, 9000, 6)
+        (50, 5,2),
+        (100, 10 , 3),
+        (200, 15, 3),
+        (500, 30, 4),
+        (800, 50, 5),
+        (1000, 80, 5),
+        (2000, 150, 5),
+        (5000, 300, 6),
+        (10000, 600, 6),
+        (20000, 1000, 6)
 """
-N, M, b = 20000, 9000, 6
+N, M, b = 1000, 80, 5
 min_u, max_u = 2, min(20,M//4)
 min_g, max_g = 2, min(10,M//4)
 min_p, max_p = 2, min(20,M//3)
 min_e, max_e = 2, min(30,M//2)
+# min_u, max_u = b//4, b*2
+# min_g, max_g = b//4, b*2
+# min_p, max_p = b//4, b*3
+# min_e, max_e = b//4, b*5
 mean, std = (min_g+max_g)//2, 2            # widen Gaussian a bit (min_g < mean < max_g, mean ~ (min+max)/2, std should remain still)
 lam = 5                       # Poisson λ (min_p < lam < max_p, 2 situation: lam near min_p / near max_p)
 scale = 3                     # Exponential scale (min_e < scale < max_e, 2 situation: lam near min_e / near max_e)
@@ -114,10 +118,10 @@ rare_group=int(0.15*M)
 rare_freq=1
 burn_rate=0.6
 scenarios = {
-    "Uniform":   gen_L_uniform(N, M, b+min_u, b+max_u),
-    "Gaussian":  gen_L_gaussian(N, M, b+mean, std, b+min_g, b+max_g),
-    "Poisson":   gen_L_poisson(N, M, b+lam, b+min_p, b+max_p),
-    "Exponential": gen_L_exponential(N, M, b+scale, b+min_e, b+max_e),
+    # "Uniform":   gen_L_uniform(N, M, b+min_u, b+max_u),
+    # "Gaussian":  gen_L_gaussian(N, M, b+mean, std, b+min_g, b+max_g),
+    # "Poisson":   gen_L_poisson(N, M, b+lam, b+min_p, b+max_p),
+    # "Exponential": gen_L_exponential(N, M, b+scale, b+min_e, b+max_e),
     "Adversarial": gen_bait_and_trap(N,M,b, rare_group_size=rare_group, rare_per_paper=rare_freq, burn_rate=burn_rate),
 }
 
