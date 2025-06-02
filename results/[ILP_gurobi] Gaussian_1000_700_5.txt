@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_gurobi] Gaussian_1000_700_5.txt
+n = 1000
+m = 700
+Objective Value: 8
+2895 ms

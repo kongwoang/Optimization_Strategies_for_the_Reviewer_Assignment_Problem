@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_gurobi] Poisson_10000_4000_6.txt
+n = 10000
+m = 4000
+Objective Value: 16
+177062 ms
