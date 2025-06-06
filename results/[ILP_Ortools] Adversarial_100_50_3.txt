@@ -1,5 +1,0 @@
-/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Adversarial_100_50_3.txt
-n = 100
-m = 50
-Objective Value: 7 OPTIMAL
-41 ms

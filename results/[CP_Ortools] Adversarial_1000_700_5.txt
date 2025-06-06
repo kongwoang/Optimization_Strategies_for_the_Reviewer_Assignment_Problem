@@ -1,5 +1,0 @@
-Adversarial_1000_700_5.txt
-n = 1000
-m = 700
-Objective Value: 8 OPTIMAL
-74913 ms

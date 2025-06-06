@@ -74,7 +74,7 @@ grouped_df = df.groupby(['n', 'm', 'b']).agg({
 grouped_df = grouped_df.sort_values('n')
 
 # Tạo nhãn trục hoành từ các bộ (n, m, b)
-labels = [f"({int(row['n'])},{int(row['m'])},{int(row['b'])})" for _, row in grouped_df.iterrows()]
+labels = [f"{int(row['n'])}" for _, row in grouped_df.iterrows()]
 
 # Trích xuất thời gian trung bình
 ILP_Ortools_times = grouped_df['ILP_Ortools_time_ms']
@@ -94,10 +94,10 @@ plt.plot(x, ILP_gurobi_times, marker='^', label='Gurobi', alpha=0.7)
 plt.yscale('log')
 
 # Đặt nhãn trục hoành, nghiêng 45 độ, font lớn
-plt.xticks(x, labels, rotation=45, ha='right', fontsize=20)
+plt.xticks(x, labels, rotation=0, ha='right', fontsize=20)
 
 # Đặt nhãn và tiêu đề với font lớn
-plt.xlabel('(#Papers, #Reviewers, Coverage)', fontsize=20)
+plt.xlabel('#Papers', fontsize=20)
 plt.ylabel('Time (ms)', fontsize=20)
 # plt.title('Integer Linear Programming Average Execute Time', fontsize=16)
 plt.legend(fontsize=20)
@@ -107,5 +107,5 @@ plt.grid(True)
 plt.tight_layout()
 
 # Lưu biểu đồ
-plt.savefig('ILP_plot.png', dpi=300, bbox_inches='tight')
+plt.savefig('figure\\ILP_plot.png', dpi=300, bbox_inches='tight')
 # plt.show()

@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Adversarial_20000_1000_6.txt
+n = 20000
+m = 1000
+Objective Value: 128 FEASIBLE
+603446 ms
