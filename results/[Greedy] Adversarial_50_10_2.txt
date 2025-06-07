@@ -1,0 +1,5 @@
+[Greedy] Adversarial_50_10_2.txt
+n = 50
+m = 10
+Objective Value: 11 FEASIBLE
+27 ms

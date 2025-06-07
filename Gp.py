@@ -1,27 +1,11 @@
-from __future__ import annotations
 
-import copy
-import math
-import random
-import sys
+from __future__ import annotations
+import os, time, copy, math, random
 from typing import Any, List, Tuple
 
-################################################################################
-#                               ── CLI args ──                                 #
-################################################################################
-
-args = sys.argv[1:]
-BAD_INIT = False
-if "--bad_init" in args or "-b" in args:
-    BAD_INIT = True
-    args = [a for a in args if a not in ("--bad_init", "-b")]
-
-inst_path = args[0] if args else "datasets\\hustack5.txt"
-
-################################################################################
-#                               ── Instance ──                                 #
-################################################################################
-
+# ----------------------------------------------------------------
+#  ── Instance I/O ­──
+# ----------------------------------------------------------------
 def read_instance(path: str) -> Tuple[int, int, int, List[List[int]]]:
     with open(path, "r", encoding="utf-8") as f:
         tok = [int(x) for line in f for x in line.strip().split()]
@@ -30,174 +14,180 @@ def read_instance(path: str) -> Tuple[int, int, int, List[List[int]]]:
     L: List[List[int]] = []
     for _ in range(N):
         k = tok[idx]; idx += 1
-        revs = tok[idx:idx+k]; idx += k
-        L.append([r-1 for r in revs])
+        revs = tok[idx:idx + k]; idx += k
+        L.append([r - 1 for r in revs])           # 0-based
     return N, M, b, L
 
-N, M, B, L = read_instance(inst_path)
-print(f"Loaded {inst_path}: N={N}, M={M}, b={B}, BAD_INIT={BAD_INIT}")
-
-GLOBAL_QUOTA = math.ceil(N*B/M)
-REVIEWER_DEG = [0]*M
-for i in range(N):
-    for r in L[i]:
-        REVIEWER_DEG[r]+=1
-
-################################################################################
-#                               ── GP core ──                                  #
-################################################################################
-
+# ----------------------------------------------------------------
+#  ── GP core (nguyên gốc, chỉ chuyển thành hàm) ──
+# ----------------------------------------------------------------
 OPS = {
-    'add': lambda a,b: a+b,
-    'sub': lambda a,b: a-b,
-    'mul': lambda a,b: a*b,
-    'div': lambda a,b: a/b if abs(b)>1e-9 else a,
-    'min': lambda a,b: a if a<b else b,
-    'max': lambda a,b: a if a>b else b,
+    'add': lambda a, b: a + b,
+    'sub': lambda a, b: a - b,
+    'mul': lambda a, b: a * b,
+    'div': lambda a, b: a / b if abs(b) > 1e-9 else a,
+    'min': lambda a, b: a if a < b else b,
+    'max': lambda a, b: a if a > b else b,
 }
 OP_NAMES = list(OPS.keys())
 TERM_NAMES = ['load', 'slack', 'deg', 'candCnt', 'rand', 'const']
-
-def rev_idx(x):
-    return int(abs(x)) % M
-
-def pap_idx(x):
-    return int(abs(x)) % N
-
-def eval_tree(node: Any, r: int, i: int, loads: List[int]):
-    t = node[0]
-    if t == 'op':
-        _, name, lft, rgt = node
-        return OPS[name](eval_tree(lft, r, i, loads), eval_tree(rgt, r, i, loads))
-    _, name, val = node
-    if name == 'load': return loads[rev_idx(r)]
-    if name == 'slack': return GLOBAL_QUOTA - loads[rev_idx(r)]
-    if name == 'deg': return REVIEWER_DEG[rev_idx(r)]
-    if name == 'candCnt': return len(L[pap_idx(i)])
-    if name == 'rand': return random.random()
-    if name == 'const': return val
-    raise ValueError
-
 MAX_DEPTH = 4
 
-def rand_const():
-    return random.uniform(-2, 2)
+def run_gp(N: int, M: int, B: int, L: List[List[int]],
+           pop_size=200, generations=40, seed=42, bad_init=False) -> Tuple[int, int]:
+    random.seed(seed)
 
-# New tree generation functions for ramp-half-and-half
-def gen_full_tree(depth):
-    if depth == 0:
-        term = random.choice(TERM_NAMES)
-        val = rand_const() if term == 'const' else None
-        return ('term', term, val)
-    else:
-        op = random.choice(OP_NAMES)
-        left = gen_full_tree(depth - 1)
-        right = gen_full_tree(depth - 1)
-        return ('op', op, left, right)
-
-def gen_grow_tree(depth):
-    if depth == 0 or (depth > 0 and random.random() < 0.3):
-        term = random.choice(TERM_NAMES)
-        val = rand_const() if term == 'const' else None
-        return ('term', term, val)
-    else:
-        op = random.choice(OP_NAMES)
-        left = gen_grow_tree(depth - 1)
-        right = gen_grow_tree(depth - 1)
-        return ('op', op, left, right)
-
-def gen_bad_tree():
-    return ('term', 'const', random.uniform(50, 100))
-
-def mutate(tree):
-    if random.random() < 0.1 or tree[0] == 'term':
-        return gen_grow_tree(MAX_DEPTH)  # Use grow for mutation
-    _, name, l, r = tree
-    if random.random() < 0.5:
-        return ('op', name, mutate(l), r)
-    return ('op', name, l, mutate(r))
-
-def crossover(a, b):
-    if a[0] == 'term' or b[0] == 'term':
-        return copy.deepcopy(b)
-    if random.random() < 0.5:
-        return ('op', a[1], crossover(a[2], b[2]), a[3])
-    return ('op', a[1], a[2], crossover(a[3], b[3]))
-
-def build_assignment(f):
-    loads = [0] * M
-    viol = 0
+    global GLOBAL_QUOTA, REVIEWER_DEG
+    GLOBAL_QUOTA = math.ceil(N * B / M)
+    REVIEWER_DEG = [0] * M
     for i in range(N):
-        assigned = []
-        for _ in range(B):
-            cands = [r for r in L[i] if r not in assigned]
-            if not cands:
-                viol += 1; break
-            scores = [(eval_tree(f, r, i, loads), r) for r in cands]
-            _, best = min(scores, key=lambda t: t[0])
-            assigned.append(best)
-            loads[best] += 1
-    return max(loads), viol
+        for r in L[i]:
+            REVIEWER_DEG[r] += 1
 
-def better(f1, f2):
-    return f1 < f2
+    # ───── helper fns ──────────────────────────
+    def rev_idx(x): return int(abs(x)) % M
+    def pap_idx(x): return int(abs(x)) % N
+    def rand_const(): return random.uniform(-2, 2)
 
-# GP loop params
-POP = 200
-GEN = 40
-TOUR = 5
-CXPB = 0.9
-MUTPB = 0.1
+    def eval_tree(node: Any, r: int, i: int, loads: List[int]):
+        t = node[0]
+        if t == 'op':
+            _, name, lft, rgt = node
+            return OPS[name](eval_tree(lft, r, i, loads), eval_tree(rgt, r, i, loads))
+        _, name, val = node
+        if name == 'load':    return loads[rev_idx(r)]
+        if name == 'slack':   return GLOBAL_QUOTA - loads[rev_idx(r)]
+        if name == 'deg':     return REVIEWER_DEG[rev_idx(r)]
+        if name == 'candCnt': return len(L[pap_idx(i)])
+        if name == 'rand':    return random.random()
+        if name == 'const':   return val
+        raise ValueError
 
-# Initialize population with ramp-half-and-half
-if BAD_INIT:
-    pop = [gen_bad_tree() for _ in range(POP)]
-else:
-    ramp_depths = list(range(2, MAX_DEPTH + 1))  # Depths 2, 3, 4
-    num_depths = len(ramp_depths)
-    trees_per_depth = POP // (2 * num_depths)  # Half full, half grow per depth
-    if trees_per_depth == 0:
-        trees_per_depth = 1  # Ensure at least one tree per method
+    # ── tree generation/mutation/crossover ──
+    def gen_full_tree(depth):
+        if depth == 0:
+            term = random.choice(TERM_NAMES)
+            val = rand_const() if term == 'const' else None
+            return ('term', term, val)
+        op = random.choice(OP_NAMES)
+        return ('op', op, gen_full_tree(depth - 1), gen_full_tree(depth - 1))
 
-    pop = []
-    for depth in ramp_depths:
-        for _ in range(trees_per_depth):
-            pop.append(gen_full_tree(depth))
-        for _ in range(trees_per_depth):
-            pop.append(gen_grow_tree(depth))
+    def gen_grow_tree(depth):
+        if depth == 0 or (depth > 0 and random.random() < 0.3):
+            term = random.choice(TERM_NAMES)
+            val = rand_const() if term == 'const' else None
+            return ('term', term, val)
+        op = random.choice(OP_NAMES)
+        return ('op', op, gen_grow_tree(depth - 1), gen_grow_tree(depth - 1))
 
-    # Fill remaining slots if needed
-    while len(pop) < POP:
-        depth = random.choice(ramp_depths)
+    def gen_bad_tree():
+        return ('term', 'const', random.uniform(50, 100))
+
+    def mutate(tree):
+        if random.random() < 0.1 or tree[0] == 'term':
+            return gen_grow_tree(MAX_DEPTH)
+        _, name, l, r = tree
         if random.random() < 0.5:
-            pop.append(gen_full_tree(depth))
-        else:
-            pop.append(gen_grow_tree(depth))
+            return ('op', name, mutate(l), r)
+        return ('op', name, l, mutate(r))
 
-fit = [build_assignment(ind) for ind in pop]
-bi = min(range(POP), key=lambda j: fit[j])
-best = copy.deepcopy(pop[bi]); best_fit = fit[bi]
-print(f"Gen0 best {best_fit}")
+    def crossover(a, b):
+        if a[0] == 'term' or b[0] == 'term':
+            return copy.deepcopy(b)
+        if random.random() < 0.5:
+            return ('op', a[1], crossover(a[2], b[2]), a[3])
+        return ('op', a[1], a[2], crossover(a[3], b[3]))
 
-for g in range(1, GEN + 1):
-    new = []
-    while len(new) < POP:
-        def sel():
-            ks = random.sample(range(POP), TOUR)
-            ks.sort(key=lambda j: fit[j])
-            return copy.deepcopy(pop[ks[0]])
-        p1, p2 = sel(), sel()
-        child = crossover(p1, p2) if random.random() < CXPB else copy.deepcopy(p1)
-        if random.random() < MUTPB:
-            child = mutate(child)
-        new.append(child)
-    pop = new
-    fit = [build_assignment(ind) for ind in pop]
-    idx = min(range(POP), key=lambda j: fit[j])
-    if better(fit[idx], best_fit):
-        best_fit = fit[idx]; best = copy.deepcopy(pop[idx])
-    if g % 1 == 0 or g == GEN:
-        print(f"Gen{g} best {best_fit}")
+    # ── evaluation ──
+    def build_assignment(f):
+        loads = [0] * M
+        viol = 0
+        for i in range(N):
+            assigned = []
+            for _ in range(B):
+                cands = [r for r in L[i] if r not in assigned]
+                if not cands:
+                    viol += 1; break
+                scores = [(eval_tree(f, r, i, loads), r) for r in cands]
+                _, best = min(scores, key=lambda t: t[0])
+                assigned.append(best)
+                loads[best] += 1
+        return max(loads), viol
 
-print("\nBest tree:", best)
-print("Fitness (max_load, violations):", best_fit)
+    # ───── GP main loop ─────
+    if bad_init:
+        pop = [gen_bad_tree() for _ in range(pop_size)]
+    else:
+        depths = list(range(2, MAX_DEPTH + 1))
+        cnt = pop_size // (2 * len(depths))
+        pop = []
+        for d in depths:
+            for _ in range(cnt):
+                pop.append(gen_full_tree(d))
+            for _ in range(cnt):
+                pop.append(gen_grow_tree(d))
+        while len(pop) < pop_size:
+            d = random.choice(depths)
+            pop.append(gen_grow_tree(d))
+
+    fit = [build_assignment(t) for t in pop]
+    best_idx = min(range(pop_size), key=lambda j: fit[j])
+    best_fit = fit[best_idx]
+    best_tree = copy.deepcopy(pop[best_idx])
+
+    TOUR = 5; CXPB = 0.9; MUTPB = 0.1
+    for _ in range(generations):
+        new_pop = []
+        while len(new_pop) < pop_size:
+            def select():
+                ks = random.sample(range(pop_size), TOUR)
+                ks.sort(key=lambda j: fit[j])
+                return copy.deepcopy(pop[ks[0]])
+            p1, p2 = select(), select()
+            child = crossover(p1, p2) if random.random() < CXPB else copy.deepcopy(p1)
+            if random.random() < MUTPB:
+                child = mutate(child)
+            new_pop.append(child)
+        pop = new_pop
+        fit = [build_assignment(t) for t in pop]
+        idx = min(range(pop_size), key=lambda j: fit[j])
+        if fit[idx] < best_fit:
+            best_fit = fit[idx]; best_tree = copy.deepcopy(pop[idx])
+
+    # best_fit = (max_load, violations)
+    return best_fit  # tuple
+
+# ----------------------------------------------------------------
+#  ── Batch runner ­──
+# ----------------------------------------------------------------
+def write_result(path, n, m, obj, runtime_ms):
+    with open(path, "w") as f:
+        f.write(f"{os.path.basename(path)}\n")
+        f.write(f"m = {m}\n")
+        f.write(f"Objective Value: {obj}\n")
+        f.write(f"{runtime_ms} ms\n")
+
+def main():
+    root = os.getcwd()
+    inst_dir = os.path.join(root, "instances")
+    res_dir  = os.path.join(root, "results")
+    os.makedirs(res_dir, exist_ok=True)
+
+    files = [f for f in os.listdir(inst_dir) if f.endswith(".txt")]
+
+    for fname in files:
+        in_path  = os.path.join(inst_dir, fname)
+        out_name = f"[GP] {fname}"
+        out_path = os.path.join(res_dir, out_name)
+
+        print(f"Đang xử lý: {fname} → {out_name}")
+        N, M, B, L = read_instance(in_path)
+
+        start = time.time()
+        max_load, violations = run_gp(N, M, B, L, seed=42, bad_init=False)
+        runtime = int((time.time() - start) * 1000)
+
+        write_result(out_path, N, M, max_load, runtime)
+
+if __name__ == "__main__":
+    main()

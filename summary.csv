@@ -1,0 +1,11 @@
+sample,n,m,ALNS_objective,ALNS_time_ms,ALNS_optimal,Greedy_objective,Greedy_time_ms,Greedy_optimal,LocalSearch_objective,LocalSearch_time_ms,LocalSearch_optimal
+Adversarial_10000_600_6,10000,600,107,12267,False,107,241,False,107,45482,False
+Adversarial_1000_80_5,1000,80,66,1653,False,66,49,False,66,353,False
+Adversarial_100_10_3,100,10,30,163,False,31,19,False,30,1,False
+Adversarial_20000_1000_6,20000,1000,128,41375,False,128,462,False,129,350680,False
+Adversarial_2000_150_5,2000,150,70,4340,False,70,68,False,70,3276,False
+Adversarial_200_15_3,200,15,41,615,False,41,13,False,40,16,False
+Adversarial_5000_300_6,5000,300,107,12111,False,107,110,False,107,24892,False
+Adversarial_500_30_4,500,30,67,872,False,69,23,False,67,146,False
+Adversarial_50_10_2,50,10,10,181,False,11,27,False,11,0,False
+Adversarial_800_50_5,800,50,82,1558,False,83,51,False,83,512,False

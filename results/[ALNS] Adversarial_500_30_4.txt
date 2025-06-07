@@ -1,0 +1,5 @@
+[ALNS] Adversarial_500_30_4.txt
+n = 500
+m = 30
+Objective Value: 67 FEASIBLE
+872 ms

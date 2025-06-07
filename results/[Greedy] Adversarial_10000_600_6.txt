@@ -1,0 +1,5 @@
+[Greedy] Adversarial_10000_600_6.txt
+n = 10000
+m = 600
+Objective Value: 107 FEASIBLE
+241 ms
