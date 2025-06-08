@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Exponential_200_100_3.txt
+n = 200
+m = 100
+Objective Value: 6 OPTIMAL
+137 ms

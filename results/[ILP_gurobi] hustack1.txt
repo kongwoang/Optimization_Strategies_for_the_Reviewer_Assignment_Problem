@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_gurobi] hustack1.txt
+n = 5
+m = 3
+Objective Value: 4
+2 ms

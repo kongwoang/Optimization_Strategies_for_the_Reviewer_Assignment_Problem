@@ -1,0 +1,5 @@
+[LocalSearch] Uniform_200_100_3.txt
+n = 200
+m = 100
+Objective Value: 6 FEASIBLE
+10 ms

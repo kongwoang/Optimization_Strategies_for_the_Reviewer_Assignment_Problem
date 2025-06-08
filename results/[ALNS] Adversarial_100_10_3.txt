@@ -1,5 +1,5 @@
 [ALNS] Adversarial_100_10_3.txt
 n = 100
 m = 10
-Objective Value: 30 FEASIBLE
-163 ms
+Objective Value: 30
+86 ms

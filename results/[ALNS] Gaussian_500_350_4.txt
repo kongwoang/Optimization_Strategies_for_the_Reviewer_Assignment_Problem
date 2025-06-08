@@ -1,0 +1,5 @@
+[ALNS] Gaussian_500_350_4.txt
+n = 500
+m = 350
+Objective Value: 12
+473 ms

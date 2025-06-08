@@ -1,0 +1,5 @@
+[GP] Uniform_10000_4000_6.txt
+n = 10000
+m = 4000
+Objective Value: 16
+1060817 ms

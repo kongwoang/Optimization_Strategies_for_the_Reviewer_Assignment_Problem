@@ -18,7 +18,7 @@ def remove_assignment(sol, loads, paper_idx):
         loads[r] -= 1
     sol[paper_idx].clear()
 
-def fitness(loads, M, avg_load, alpha=1.0, beta=0.5, gamma=0.2):
+def fitness(loads, M, avg_load, alpha=0.9, beta=0.05, gamma=0.05):
     load_values = [loads.get(j, 0) for j in range(1, M + 1)]
     maxL = max(load_values)
     varL = variance(load_values)

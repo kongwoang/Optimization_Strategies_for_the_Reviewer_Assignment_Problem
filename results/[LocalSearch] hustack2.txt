@@ -1,0 +1,5 @@
+[LocalSearch] hustack2.txt
+n = 200
+m = 30
+Objective Value: 21 FEASIBLE
+5 ms

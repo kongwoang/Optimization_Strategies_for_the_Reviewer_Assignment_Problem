@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Poisson_100_50_3.txt
+n = 100
+m = 50
+Objective Value: 6 OPTIMAL
+61 ms

@@ -1,0 +1,5 @@
+[GP] Gaussian_500_350_4.txt
+n = 500
+m = 350
+Objective Value: 7
+389131 ms

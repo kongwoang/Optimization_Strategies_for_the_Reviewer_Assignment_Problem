@@ -1,5 +1,5 @@
 [ALNS] Adversarial_2000_150_5.txt
 n = 2000
 m = 150
-Objective Value: 70 FEASIBLE
-4340 ms
+Objective Value: 70
+2990 ms

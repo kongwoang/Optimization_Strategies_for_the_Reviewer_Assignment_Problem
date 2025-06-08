@@ -1,0 +1,5 @@
+[ALNS] Gaussian_200_100_3.txt
+n = 200
+m = 100
+Objective Value: 7
+160 ms

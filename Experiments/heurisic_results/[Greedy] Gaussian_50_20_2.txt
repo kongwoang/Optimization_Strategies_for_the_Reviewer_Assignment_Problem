@@ -1,0 +1,5 @@
+[Greedy] Gaussian_50_20_2.txt
+n = 50
+m = 20
+Objective Value: 6
+0 ms

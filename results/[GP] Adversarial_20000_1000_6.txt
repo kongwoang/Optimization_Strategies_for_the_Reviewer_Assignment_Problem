@@ -1,0 +1,5 @@
+[GP] Adversarial_20000_1000_6.txt
+n = 20000
+m = 1000
+Objective Value: 130
+701436 ms

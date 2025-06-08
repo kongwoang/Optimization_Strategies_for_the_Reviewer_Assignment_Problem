@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Adversarial_50_10_2.txt
+n = 50
+m = 10
+Objective Value: 10 OPTIMAL
+10 ms

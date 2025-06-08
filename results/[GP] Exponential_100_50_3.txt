@@ -1,0 +1,5 @@
+[GP] Exponential_100_50_3.txt
+n = 100
+m = 50
+Objective Value: 7
+71748 ms

@@ -1,0 +1,5 @@
+[GP] hustack1.txt
+n = 5
+m = 3
+Objective Value: 4
+1709 ms

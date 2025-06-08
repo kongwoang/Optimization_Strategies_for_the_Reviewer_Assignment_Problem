@@ -1,0 +1,5 @@
+[ALNS] Adversarial_1000_80_5.txt
+n = 1000
+m = 80
+Objective Value: 66
+1231 ms

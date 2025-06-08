@@ -1,0 +1,5 @@
+[Greedy] Gaussian_20000_9000_6.txt
+n = 20000
+m = 9000
+Objective Value: 14
+498 ms

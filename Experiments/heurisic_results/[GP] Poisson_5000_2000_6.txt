@@ -1,0 +1,5 @@
+[GP] Poisson_5000_2000_6.txt
+n = 5000
+m = 2000
+Objective Value: 17
+693856 ms

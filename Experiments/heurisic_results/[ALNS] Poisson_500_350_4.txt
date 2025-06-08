@@ -1,0 +1,5 @@
+[ALNS] Poisson_500_350_4.txt
+n = 500
+m = 350
+Objective Value: 9
+768 ms

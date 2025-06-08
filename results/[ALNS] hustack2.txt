@@ -1,0 +1,5 @@
+[ALNS] hustack2.txt
+n = 200
+m = 30
+Objective Value: 21
+105 ms

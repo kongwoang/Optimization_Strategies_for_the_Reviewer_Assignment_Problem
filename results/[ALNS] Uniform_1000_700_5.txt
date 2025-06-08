@@ -1,0 +1,5 @@
+[ALNS] Uniform_1000_700_5.txt
+n = 1000
+m = 700
+Objective Value: 8
+1700 ms

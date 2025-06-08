@@ -1,0 +1,5 @@
+[Greedy] hustack3.txt
+n = 300
+m = 30
+Objective Value: 31
+2 ms

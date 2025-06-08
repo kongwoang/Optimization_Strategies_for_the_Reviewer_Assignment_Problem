@@ -1,0 +1,173 @@
+import os, random
+import matplotlib.pyplot as plt
+
+# ---------- Tiện ích cơ bản ----------
+def variance(values):
+    n = len(values)
+    if n == 0:
+        return 0
+    mean = sum(values) / n
+    return sum((x - mean) ** 2 for x in values) / n
+
+def add_assignment(sol, loads, paper_idx, reviewers):
+    sol[paper_idx] = reviewers[:]
+    for r in reviewers:
+        loads[r] += 1
+
+def remove_assignment(sol, loads, paper_idx):
+    for r in sol[paper_idx]:
+        loads[r] -= 1
+    sol[paper_idx].clear()
+
+def fitness(loads, M, avg_load, alpha=0.9, beta=0.05, gamma=0.05):
+    load_values = [loads.get(j, 0) for j in range(1, M + 1)]
+    maxL = max(load_values)
+    varL = variance(load_values)
+    overload_count = sum(1 for l in load_values if l > avg_load)
+    return alpha * maxL + beta * varL + gamma * overload_count
+
+def initial_solution(N, M, b, L):
+    sol   = [[] for _ in range(N)]
+    loads = {i: 0 for i in range(1, M + 1)}
+    for i in range(N):
+        cand = sorted(L[i], key=lambda r: loads[r])
+        add_assignment(sol, loads, i, cand[:b])
+    return sol, loads
+
+def random_destroy(sol, loads, ratio):
+    N = len(sol)
+    k = max(1, int(N * ratio))
+    removed = random.sample(range(N), k)
+    for i in removed:
+        remove_assignment(sol, loads, i)
+    return removed
+
+def worst_load_destroy(sol, loads, ratio):
+    N = len(sol)
+    k = max(1, int(N * ratio))
+    idx = sorted(range(N),
+                 key=lambda i: sum(loads.get(r, 0) for r in sol[i]),
+                 reverse=True)[:k]
+    for i in idx:
+        remove_assignment(sol, loads, i)
+    return idx
+
+def greedy_repair(sol, loads, removed, b, L):
+    for i in removed:
+        cand = sorted(L[i], key=lambda r: loads[r])
+        add_assignment(sol, loads, i, cand[:b])
+
+def random_repair(sol, loads, removed, b, L):
+    for i in removed:
+        cand = L[i][:]
+        random.shuffle(cand)
+        add_assignment(sol, loads, i, cand[:b])
+
+def choose(ops, weights):
+    return random.choices(range(len(ops)), weights=weights, k=1)[0]
+
+def update_weights(weights, idx, reward, decay=0.9):
+    for i in range(len(weights)):
+        if i == idx:
+            weights[i] = decay * weights[i] + reward
+        else:
+            weights[i] = decay * weights[i]
+
+# ---------- ALNS chính ----------
+def alns(N, M, b, L, max_iter=1000, seed=42, track_history=False):
+    random.seed(seed)
+    destroy_ops = [random_destroy, worst_load_destroy]
+    repair_ops  = [greedy_repair, random_repair]
+    dw, rw = [1.0]*len(destroy_ops), [1.0]*len(repair_ops)
+
+    avg_load        = b * N / M
+    current, loads  = initial_solution(N, M, b, L)
+    best_val        = fitness(loads, M, avg_load)
+
+    fitness_hist = [best_val] if track_history else None
+    dw_hist, rw_hist = [], []
+
+    for _ in range(max_iter):
+        didx = choose(destroy_ops, dw)
+        ridx = choose(repair_ops,  rw)
+
+        saved_sol  = [r[:] for r in current]
+        saved_load = loads.copy()
+
+        removed = destroy_ops[didx](current, loads, ratio=0.15)
+        repair_ops[ridx](current, loads, removed, b, L)
+        val = fitness(loads, M, avg_load)
+
+        if val < best_val:
+            best_val = val
+            update_weights(dw, didx, reward=2)
+            update_weights(rw, ridx, reward=2)
+        else:
+            current, loads = saved_sol, saved_load
+            update_weights(dw, didx, reward=0.1)
+            update_weights(rw, ridx, reward=0.1)
+
+        # Ghi lại xác suất chọn sau update
+        dw_total = sum(dw)
+        rw_total = sum(rw)
+        dw_hist.append([w / dw_total for w in dw])
+        rw_hist.append([w / rw_total for w in rw])
+
+        if track_history:
+            fitness_hist.append(best_val)
+
+    return (loads, fitness_hist, dw_hist, rw_hist) if track_history else loads
+
+# ---------- Đọc input ----------
+def read_instance(path):
+    with open(path, "r") as f:
+        N, M, b = map(int, f.readline().split())
+        L = []
+        for _ in range(N):
+            tokens = list(map(int, f.readline().split()))
+            k, reviewers = tokens[0], tokens[1:]
+            assert len(reviewers) == k
+            L.append(reviewers)
+    return N, M, b, L
+
+# ---------- Chạy và plot ----------
+if __name__ == "__main__":
+    path = "instances\\Adversarial_800_50_5.txt"  # ⚠️ Chỉnh đường dẫn nếu cần
+    N, M, b, L = read_instance(path)
+
+    _, fitness_hist, dw_hist, rw_hist = alns(N, M, b, L, max_iter=1000, seed=42, track_history=True)
+
+
+    # Plot gộp tỷ lệ chọn destroy + repair
+    # Plot từ iteration 0 đến 200, tên rõ nghĩa, lưu ảnh vuông dpi 300
+    start_iter = 0
+    end_iter = 200
+
+    dw_hist = list(zip(*dw_hist))  # destroy history [operator][iteration]
+    rw_hist = list(zip(*rw_hist))  # repair history  [operator][iteration]
+
+    destroy_labels = ["Random Destroy", "Worst Load Destroy"]
+    repair_labels  = ["Greedy Repair", "Random Repair"]
+
+    plt.figure(figsize=(6, 5))  # Hình vuông
+
+    # Plot destroy
+    for i, op_ratio in enumerate(dw_hist):
+        plt.plot(range(start_iter, end_iter),
+                 op_ratio[start_iter:end_iter],
+                 label=destroy_labels[i], linestyle='-')
+
+    # Plot repair
+    for i, op_ratio in enumerate(rw_hist):
+        plt.plot(range(start_iter, end_iter),
+                 op_ratio[start_iter:end_iter],
+                 label=repair_labels[i], linestyle='--')
+
+    plt.xlabel("Iteration")
+    plt.ylabel("Selection Probability")
+    # plt.title("Operator Selection Probabilities (Iteration 0–200)")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('Experiments\\figure\\ALNS_prob_plot.png', dpi=300)
+    plt.show()

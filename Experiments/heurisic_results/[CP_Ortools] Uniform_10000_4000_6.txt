@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] Uniform_10000_4000_6.txt
+n = 10000
+m = 4000
+Objective Value: 15 FEASIBLE
+602582 ms

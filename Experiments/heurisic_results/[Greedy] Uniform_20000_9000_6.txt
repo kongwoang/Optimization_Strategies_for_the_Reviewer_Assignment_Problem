@@ -1,0 +1,5 @@
+[Greedy] Uniform_20000_9000_6.txt
+n = 20000
+m = 9000
+Objective Value: 14
+622 ms

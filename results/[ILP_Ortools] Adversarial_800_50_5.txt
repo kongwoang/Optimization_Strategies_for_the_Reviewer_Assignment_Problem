@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_Ortools] Adversarial_800_50_5.txt
+n = 800
+m = 50
+Objective Value: 82 OPTIMAL
+696 ms

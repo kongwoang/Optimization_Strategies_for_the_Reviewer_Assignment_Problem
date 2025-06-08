@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[CP_Ortools] hustack4.txt
+n = 700
+m = 70
+Objective Value: 30 OPTIMAL
+1621 ms

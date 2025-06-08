@@ -1,0 +1,5 @@
+/workspaces/Optimization_Strategies_for_the_Reviewer_Assignment_Problem/results/[ILP_gurobi] Adversarial_500_30_4.txt
+n = 500
+m = 30
+Objective Value: 67
+113 ms

@@ -1,0 +1,5 @@
+[LocalSearch] hustack5.txt
+n = 900
+m = 90
+Objective Value: 30 FEASIBLE
+89 ms

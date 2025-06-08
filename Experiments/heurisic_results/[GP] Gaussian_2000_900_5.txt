@@ -1,0 +1,5 @@
+[GP] Gaussian_2000_900_5.txt
+n = 2000
+m = 900
+Objective Value: 12
+614456 ms

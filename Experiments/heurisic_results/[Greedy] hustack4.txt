@@ -1,0 +1,5 @@
+[Greedy] hustack4.txt
+n = 700
+m = 70
+Objective Value: 31
+34 ms

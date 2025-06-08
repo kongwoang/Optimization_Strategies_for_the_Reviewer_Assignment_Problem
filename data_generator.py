@@ -118,10 +118,10 @@ rare_group=int(0.15*M)
 rare_freq=1
 burn_rate=0.6
 scenarios = {
-    # "Uniform":   gen_L_uniform(N, M, b+min_u, b+max_u),
-    # "Gaussian":  gen_L_gaussian(N, M, b+mean, std, b+min_g, b+max_g),
-    # "Poisson":   gen_L_poisson(N, M, b+lam, b+min_p, b+max_p),
-    # "Exponential": gen_L_exponential(N, M, b+scale, b+min_e, b+max_e),
+    "Uniform":   gen_L_uniform(N, M, b+min_u, b+max_u),
+    "Gaussian":  gen_L_gaussian(N, M, b+mean, std, b+min_g, b+max_g),
+    "Poisson":   gen_L_poisson(N, M, b+lam, b+min_p, b+max_p),
+    "Exponential": gen_L_exponential(N, M, b+scale, b+min_e, b+max_e),
     "Adversarial": gen_bait_and_trap(N,M,b, rare_group_size=rare_group, rare_per_paper=rare_freq, burn_rate=burn_rate),
 }
 
