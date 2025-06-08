@@ -1,5 +1,7 @@
-import os, time, random
+import os, random
+import matplotlib.pyplot as plt
 
+# ---------- Tiện ích cơ bản ----------
 def variance(values):
     n = len(values)
     if n == 0:
@@ -44,8 +46,8 @@ def worst_load_destroy(sol, loads, ratio):
     N = len(sol)
     k = max(1, int(N * ratio))
     idx = sorted(range(N),
-                key=lambda i: sum(loads.get(r, 0) for r in sol[i]),
-                reverse=True)[:k]
+                 key=lambda i: sum(loads.get(r, 0) for r in sol[i]),
+                 reverse=True)[:k]
     for i in idx:
         remove_assignment(sol, loads, i)
     return idx
@@ -71,7 +73,8 @@ def update_weights(weights, idx, reward, decay=0.9):
         else:
             weights[i] = decay * weights[i]
 
-def alns(N, M, b, L, max_iter=1000, seed=42):
+# ---------- ALNS chính ----------
+def alns(N, M, b, L, max_iter=1000, seed=42, track_history=False):
     random.seed(seed)
     destroy_ops = [random_destroy, worst_load_destroy]
     repair_ops  = [greedy_repair, random_repair]
@@ -80,6 +83,16 @@ def alns(N, M, b, L, max_iter=1000, seed=42):
     avg_load        = b * N / M
     current, loads  = initial_solution(N, M, b, L)
     best_val        = fitness(loads, M, avg_load)
+
+    var_hist = []
+    overload_hist = []
+
+    def record_stats():
+        load_values = [loads.get(j, 0) for j in range(1, M + 1)]
+        var_hist.append(variance(load_values))
+        overload_hist.append(sum(1 for l in load_values if l > avg_load))
+
+    record_stats()
 
     for _ in range(max_iter):
         didx = choose(destroy_ops, dw)
@@ -101,9 +114,11 @@ def alns(N, M, b, L, max_iter=1000, seed=42):
             update_weights(dw, didx, reward=0.1)
             update_weights(rw, ridx, reward=0.1)
 
-    return loads            # trả về dict tải reviewer
+        record_stats()
 
-# ---------- I/O ----------------------------------------------------
+    return var_hist, overload_hist
+
+# ---------- Đọc input ----------
 def read_instance(path):
     with open(path, "r") as f:
         N, M, b = map(int, f.readline().split())
@@ -115,37 +130,37 @@ def read_instance(path):
             L.append(reviewers)
     return N, M, b, L
 
-def write_result(out_path, n, m, obj, runtime_ms):
-    with open(out_path, "w") as f:
-        f.write(f"{os.path.basename(out_path)}\n")
-        f.write(f"n = {n}\n")
-        f.write(f"m = {m}\n")
-        f.write(f"Objective Value: {obj}\n")
-        f.write(f"{runtime_ms} ms\n")
-
-# ---------- batch runner -------------------------------------------
-def main():
-    root = os.getcwd()
-    inst_dir = os.path.join(root, "instances")
-    res_dir  = os.path.join(root, "results")
-    os.makedirs(res_dir, exist_ok=True)
-
-    files = [f for f in os.listdir(inst_dir) if f.endswith(".txt")]
-
-    for fname in files:
-        in_path  = os.path.join(inst_dir, fname)
-        out_name = f"[ALNS] {fname}"
-        out_path = os.path.join(res_dir, out_name)
-
-        print(f"Đang xử lý: {fname} → {out_name}")
-        N, M, b, L = read_instance(in_path)
-
-        start = time.time()
-        loads = alns(N, M, b, L, max_iter=1000, seed=42)
-        runtime = int((time.time() - start) * 1000)
-
-        max_load = max(loads.values()) if loads else 0
-        write_result(out_path, N, M, max_load, runtime)
-
+# ---------- MAIN & plot gộp ----------
 if __name__ == "__main__":
-    main()
+    path = "instances\\Adversarial_800_50_5.txt"  # ⚠️ Chỉnh đường dẫn nếu cần
+    N, M, b, L = read_instance(path)
+
+    var_hist, overload_hist = alns(N, M, b, L, max_iter=1000, seed=42)
+    start_iter = 0
+    end_iter = 50
+
+    var_hist = var_hist[start_iter:end_iter]
+    overload_hist = overload_hist[start_iter:end_iter]
+    iterations = list(range(start_iter, end_iter))
+
+    # Gộp plot: VARIANCE + OVERLOADED COUNT
+    fig, ax1 = plt.subplots(figsize=(6, 5))
+
+    # Trục trái: variance
+    color1 = 'tab:blue'
+    ax1.set_xlabel("Iteration")
+    ax1.set_ylabel("Load Variance", color=color1)
+    ax1.plot(iterations, var_hist, color=color1, label="Variance")
+    ax1.tick_params(axis='y', labelcolor=color1)
+
+    # Trục phải: overload count
+    ax2 = ax1.twinx()
+    color2 = 'tab:red'
+    ax2.set_ylabel("Overloaded Reviewers", color=color2)
+    ax2.plot(iterations, overload_hist, color=color2, linestyle='--', label="Overloaded Reviewers")
+    ax2.tick_params(axis='y', labelcolor=color2)
+
+    # fig.suptitle("Variance and Overloaded Reviewers (Iteration 0–200)")
+    fig.tight_layout()
+    plt.savefig("Experiments\\figure\\ALNS_var_plot.png", dpi=300)
+    plt.show()

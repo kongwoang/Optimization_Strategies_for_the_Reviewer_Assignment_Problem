@@ -2,9 +2,7 @@ from __future__ import annotations
 import os, time, copy, math, random
 from typing import Any, List, Tuple
 
-# ────────────────────────────────────────────────────────────────
-#  Instance I/O
-# ────────────────────────────────────────────────────────────────
+
 def read_instance(path: str) -> Tuple[int, int, int, List[List[int]]]:
     with open(path, "r", encoding="utf-8") as f:
         tok = [int(x) for line in f for x in line.strip().split()]
@@ -13,12 +11,10 @@ def read_instance(path: str) -> Tuple[int, int, int, List[List[int]]]:
     for _ in range(N):
         k = tok[idx]; idx += 1
         revs = tok[idx:idx + k]; idx += k
-        L.append([r - 1 for r in revs])           # 0-based
+        L.append([r - 1 for r in revs])           
     return N, M, b, L
 
-# ────────────────────────────────────────────────────────────────
-#  GP core — thêm time-limit
-# ────────────────────────────────────────────────────────────────
+
 OPS = {
     'add': lambda a, b: a + b,
     'sub': lambda a, b: a - b,
@@ -39,14 +35,10 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
            seed=42,
            bad_init=False,
            time_limit_s: float | None = None) -> Tuple[int, int]:
-    """
-    Trả về (max_load, violations) tốt nhất tìm được trong time_limit_s giây.
-    Nếu time_limit_s=None → chạy đủ max_generations.
-    """
+
     random.seed(seed)
     start_time = time.time()
 
-    # ----- tiền xử lý hằng số -----
     global GLOBAL_QUOTA, REVIEWER_DEG
     GLOBAL_QUOTA = math.ceil(N * B / M)
     REVIEWER_DEG = [0] * M
@@ -54,7 +46,7 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
         for r in L[i]:
             REVIEWER_DEG[r] += 1
 
-    # ----- helper -----
+
     def rev_idx(x): return int(abs(x)) % M
     def pap_idx(x): return int(abs(x)) % N
     def rand_const(): return random.uniform(-2, 2)
@@ -74,7 +66,7 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
         if name == 'const':   return val
         raise ValueError
 
-    # ---------- tree ops ----------
+
     def gen_full_tree(d):
         if d == 0:
             t = random.choice(TERM_NAMES)
@@ -107,7 +99,6 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
             return ('op', a[1], crossover(a[2], b[2]), a[3])
         return ('op', a[1], a[2], crossover(a[3], b[3]))
 
-    # ---------- evaluation ----------
     def build_assignment(tree):
         loads = [0] * M
         viol  = 0
@@ -123,7 +114,7 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
                 loads[best] += 1
         return max(loads), viol
 
-    # ---------- init population ----------
+
     if bad_init:
         pop = [gen_bad_tree() for _ in range(pop_size)]
     else:
@@ -141,14 +132,14 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
     best = min(zip(pop, fit), key=lambda x: x[1])
     TOUR, CXPB, MUTPB = 5, .9, .1
 
-    # ---------- evolutionary loop w/ timeout ----------
+
     gen = 0
     while gen < max_generations:
         if time_limit_s and (time.time() - start_time) >= time_limit_s:
             break
         gen += 1
 
-        # breeding
+
         def select():
             idxs = random.sample(range(pop_size), TOUR)
             return copy.deepcopy(min(idxs, key=lambda j: fit[j]) and pop[min(idxs, key=lambda j: fit[j])])
@@ -165,12 +156,8 @@ def run_gp(N: int, M: int, B: int, L: List[List[int]],
         if cand[1] < best[1]:
             best = (copy.deepcopy(cand[0]), cand[1])
 
-    return best[1]   # (max_load, violations)
+    return best[1]   
 
-
-# ────────────────────────────────────────────────────────────────
-#  Batch runner
-# ────────────────────────────────────────────────────────────────
 def write_result(path, n, m, obj, runtime_ms):
     with open(path, "w") as f:
         f.write(f"{os.path.basename(path)}\n")
@@ -199,7 +186,7 @@ def main():
         start = time.time()
         max_load, _ = run_gp(N, M, B, L,
                              seed=42,
-                             time_limit_s=600)          # 10 phút
+                             time_limit_s=600)       
         runtime_ms = int((time.time() - start) * 1000)
 
         write_result(out_path, N, M, max_load, runtime_ms)
