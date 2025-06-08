@@ -1,107 +1,159 @@
 # Optimization Strategies for the Reviewer Assignment Problem
 
-This project explores optimization strategies for the Reviewer Assignment Problem (RAP), a key challenge in academic conference management. The goal is to assign a fixed number of reviewers to each paper, minimizing the maximum load on any reviewer while respecting eligibility constraints.
+This repository accompanies the technical report **“Optimization Strategies for the Reviewer Assignment Problem”**. It contains all source code, datasets, and experiment scripts referenced in the paper, plus instructions to reproduce every figure and table.
 
-## Table of Contents
-- [Introduction](#introduction)
-- [Problem Description](#problem-description)
-- [Mathematical Model](#mathematical-model)
-- [Solution Approaches](#solution-approaches)
-  - [Integer Linear Programming (ILP)](#integer-linear-programming-ilp)
-  - [Greedy Algorithm](#greedy-algorithm)
-  - [Hill-Climbing Local Search](#hill-climbing-local-search)
-  - [Adaptive Large Neighborhood Search (ALNS)](#adaptive-large-neighborhood-search-alns)
-  - [Genetic Programming (GP)](#genetic-programming-gp)
-- [Experiments](#experiments)
-- [Results](#results)
-- [Conclusion](#conclusion)
-- [Acknowledgements](#acknowledgements)
-- [References](#references)
+> **Goal**
+> Assign a fixed number of reviewers to every paper while **minimising** the maximum load on any reviewer under eligibility constraints.
+
+---
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Problem Description](#problem-description)
+3. [Mathematical Model](#mathematical-model)
+4. [Solution Approaches](#solution-approaches)
+
+   * [Integer Linear Programming (ILP)](#integer-linear-programming-ilp)
+   * [Greedy Algorithm](#greedy-algorithm)
+   * [Hill‑Climbing Local Search (HCLS)](#hill-climbing-local-search-hcls)
+   * [Adaptive Large Neighborhood Search (ALNS)](#adaptive-large-neighborhood-search-alns)
+   * [Genetic Programming (GP)](#genetic-programming-gp)
+5. [Experiments](#experiments)
+6. [Results](#results)
+7. [Usage & Reproducibility](#usage--reproducibility)
+8. [Conclusion](#conclusion)
+9. [Acknowledgements](#acknowledgements)
+10. [References](#references)
 
 ---
 
 ## Introduction
-The Reviewer Assignment Problem (RAP) involves assigning submitted papers to suitable reviewers, ensuring each paper receives fair and expert reviews while balancing reviewer workloads. As the number of papers and reviewers grows, the problem becomes computationally challenging (NP-hard).
 
-This project presents and compares several methods for solving RAP, focusing on solution quality, computational efficiency, and workload balance.
+The **Reviewer Assignment Problem (RAP)** appears in academic conference management. Each submitted paper must receive *b* independent reviews from eligible reviewers, but no reviewer should be overloaded. RAP is **NP‑hard**, motivating both exact and heuristic methods.
+
+This project implements and compares five optimisation strategies ranging from Integer Linear Programming to Genetic Programming, reporting their strengths, weaknesses, and empirical performance.
 
 ## Problem Description
-- **Inputs:** Sets of papers and reviewers, eligibility lists for each paper, and a fixed number of reviewers per paper.
-- **Constraints:** Each paper must be assigned exactly _b_ reviewers from its eligible list.
-- **Objective:** Minimize the maximum number of papers assigned to any reviewer (i.e., balance the load).
+
+* **Inputs**
+
+  * Set of papers \$\mathcal P\$ and reviewers \$\mathcal R\$.
+  * Eligibility list \$L(i)\$ for each paper \$i\$.
+  * Target number of reviews per paper \$b\$.
+* **Constraints**  Each paper must be assigned exactly \$b\$ eligible reviewers.
+* **Objective**     Minimise the **maximum** number of papers assigned to any single reviewer.
 
 ## Mathematical Model
-Let:
-- $\mathcal{P}$: Set of papers
-- $\mathcal{R}$: Set of reviewers
-- $L(i)$: Eligible reviewers for paper $i$
-- $b$: Number of reviewers per paper
-- $x_{ij}$: Binary variable (1 if reviewer $j$ is assigned to paper $i$)
-- $z$: Maximum reviewer load
 
-**Objective:**
-$$
-\min z = \max_{j \in \mathcal{R}} \sum_{i \in \mathcal{P}} x_{ij}
-$$
+Let \$x\_{ij}=1\$ if reviewer \$j\$ is assigned to paper \$i\$ and 0 otherwise. Define the maximum load variable \$z\$.
 
-**Constraints:**
-- Each paper assigned to exactly $b$ eligible reviewers
-- Reviewer assignments respect eligibility
+```math
+\min z = \max_{j \in \mathcal R} \sum_{i \in \mathcal P} x_{ij}
+```
+
+Subject to
+
+* Paper coverage: \$\sum\_{j\in L(i)} x\_{ij} = b ;; \forall i \in \mathcal P\$
+* Eligibility only: \$x\_{ij}=0\$ if \$j \notin L(i)\$
+* Binary variables: \$x\_{ij}\in{0,1}\$
 
 ## Solution Approaches
-### Integer Linear Programming (ILP)
-- **Solvers:** OR-Tools (pywraplp, CP-SAT), Gurobi
-- **Strengths:** Finds optimal solutions for small/medium instances
-- **Limitations:** Scalability issues for large datasets
+
+### Integer Linear Programming (ILP)
+
+* **Solvers used**  OR‑Tools (pywraplp & CP‑SAT) and Gurobi.
+* **Pros** Optimal solutions on small/medium instances.
+* **Cons** Runtime grows sharply with instance size.
 
 ### Greedy Algorithm
-- Assigns reviewers with the lowest current load and fewest eligible papers to each paper.
-- **Pros:** Fast, simple, no parameter tuning
-- **Cons:** May not always find the optimal solution
 
-### Hill-Climbing Local Search
-- Starts from a random feasible solution and iteratively improves by swapping assignments to reduce the maximum load.
-- **Pros:** Better solution quality than greedy, reasonable runtime
-- **Cons:** Can get stuck in local optima
+Assign reviewers iteratively, always picking the reviewer with (i) lowest current load and (ii) fewest remaining candidate papers.
 
-### Adaptive Large Neighborhood Search (ALNS)
-- Alternates between destroying and repairing parts of the solution using adaptive heuristics.
-- **Pros:** Balances load and fairness, escapes local optima
-- **Cons:** Slower than greedy/HCLS, more complex
+* **Pros** Light‑weight, no parameter tuning, \$\mathcal O(N\log N)\$.
+* **Cons** Sub‑optimal in about half the test cases.
 
-### Genetic Programming (GP)
-- Evolves assignment policies as tree-based programs using genetic operators.
-- **Pros:** Learns complex heuristics automatically
-- **Cons:** High computational cost, less consistent performance
+### Hill‑Climbing Local Search (HCLS)
+
+Start from a random feasible assignment and swap overloaded reviewers until no improving move exists.
+
+* **Pros** Better quality than Greedy (optimal ≈ 58% of tests).
+* **Cons** Can stall in local optima.
+
+### Adaptive Large Neighborhood Search (ALNS)
+
+Iteratively *destroy* and *repair* parts of the solution. Operator choice is learned online via scores.
+
+* **Pros** Best workload **fairness**; escapes local optima.
+* **Cons** Longer runtime; more parameters.
+
+### Genetic Programming (GP)
+
+Evolves assignment heuristics represented as expression trees composed of features such as load, slack, degree, etc.
+
+* **Pros** Automatically discovers nonlinear policies.
+* **Cons** Most computationally expensive; inconsistent on large data.
 
 ## Experiments
-- **Dataset:** 55 synthetic test cases with varying numbers of papers, reviewers, and eligibility distributions (Uniform, Gaussian, Poisson, Exponential, Adversarial).
-- **Environment:** GitHub Codespaces (2-core AMD EPYC, 8GB RAM, Ubuntu 20.04, Python 3.12.1)
-- **Metrics:** Solution quality (max reviewer load), runtime, fairness (variance in load)
+
+* **Dataset** 55 synthetic instances (50 – 20 000 papers) across Uniform, Gaussian, Poisson, Exponential and custom *Adversarial* distributions.
+* **Platform** GitHub Codespaces ‑ 2‑core AMD EPYC 7763, 8 GB RAM, Ubuntu 20.04, Python 3.12.1.
+* **Metrics** Maximum load, runtime, load variance.
 
 ## Results
-- **ILP (Gurobi):** Best for small/medium instances, optimal solutions, fastest among ILP solvers.
-- **Greedy:** Fastest overall, optimal in ~25/55 cases.
-- **HCLS:** Optimal in ~32/55 cases, better than greedy for most others.
-- **ALNS:** Slightly slower, but best for fairness and balancing workloads.
-- **GP:** Most flexible, but slowest and less consistent.
 
-See the report for detailed tables and plots.
+| Method     | Optimal cases (55) | Avg. runtime          | Notes                  |
+| ---------- | ------------------ | --------------------- | ---------------------- |
+| **Gurobi** | 55                 | Fastest ILP           | Small/medium only      |
+| **Greedy** | 25                 | ***Fastest overall*** | No fairness guarantee  |
+| **HCLS**   | 32                 | Moderate              | Good quality vs. speed |
+| **ALNS**   | 29                 | Slower                | Best fairness          |
+| **GP**     | 9                  | Slowest               | High variance          |
+
+Full tables & plots are in `/report/figures` and the LaTeX report.
+
+## Usage & Reproducibility
+
+1. **Clone repo**
+
+   ```bash
+   git clone https://github.com/kongwoang/Optimization_Strategies_for_the_Reviewer_Assignment_Problem.git
+   cd Optimization_Strategies_for_the_Reviewer_Assignment_Problem
+   ```
+2. **Create env & install deps**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Run a solver** (example ALNS on a test set)
+
+   ```bash
+   python Experiments/alns_solver.py --instance data/Adversarial_4.json --iters 1000
+   ```
+4. **Reproduce all figures**
+
+   ```bash
+   bash scripts/run_all_experiments.sh
+   ```
+
+   Results & plots will appear in `output/`.
 
 ## Conclusion
-- **ILP** is best for small instances.
-- **Greedy** is suitable for quick, large-scale assignments.
-- **HCLS** offers a good balance of speed and quality.
-- **ALNS** is recommended when fairness is critical.
-- **GP** shows promise for learning assignment policies but needs further optimization.
 
-Future work includes hybrid methods, real-world datasets, and support for reviewer preferences/conflicts.
+* **ILP** (Gurobi) optimal but limited scalability.
+* **Greedy** best when time is critical.
+* **HCLS** strong quality–speed trade‑off.
+* **ALNS** recommended when workload fairness matters.
+* **GP** promising for automatic heuristic discovery; needs further optimisation.
+
+Future work: hybrid methods, real conference data, explicit reviewer preferences / conflicts.
 
 ## Acknowledgements
-Special thanks to Dr. Pham Quang Dung for guidance and support, and to all team members for their collaboration and technical contributions.
+
+We thank **Dr Pham Quang Dung** for guidance throughout the *Fundamentals of Optimization* course, and teammates **Le Tien Hop, Tran Phong Quan, Nguyen Gia Minh** for their contributions.
 
 ## References
-- [Project Repository](https://github.com/kongwoang/Optimization_Strategies_for_the_Reviewer_Assignment_Problem)
-- See the report for full bibliography.
 
----
+Full bibliography is available in `report/references.bib` and the accompanying IEEE‑format PDF.
