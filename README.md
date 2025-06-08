@@ -122,25 +122,7 @@ Full tables & plots are in `/report/figures` and the LaTeX report.
    git clone https://github.com/kongwoang/Optimization_Strategies_for_the_Reviewer_Assignment_Problem.git
    cd Optimization_Strategies_for_the_Reviewer_Assignment_Problem
    ```
-2. **Create env & install deps**
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-   ```
-3. **Run a solver** (example ALNS on a test set)
-
-   ```bash
-   python Experiments/alns_solver.py --instance data/Adversarial_4.json --iters 1000
-   ```
-4. **Reproduce all figures**
-
-   ```bash
-   bash scripts/run_all_experiments.sh
-   ```
-
-   Results & plots will appear in `output/`.
 
 ## Conclusion
 
