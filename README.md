@@ -38,11 +38,13 @@ This project implements and compares five optimisation strategies ranging from I
 
 * **Inputs**
 
-  * Set of papers \$\mathcal P\$ and reviewers \$\mathcal R\$.
-  * Eligibility list \$L(i)\$ for each paper \$i\$.
-  * Target number of reviews per paper \$b\$.
-* **Constraints**  Each paper must be assigned exactly \$b\$ eligible reviewers.
-* **Objective**     Minimise the **maximum** number of papers assigned to any single reviewer.
+* Set of papers $\mathcal{P}$ and reviewers $\mathcal{R}$.
+* Eligibility list $L(i)$ for each paper $i$.
+* Target number of reviews per paper $b$.
+
+**Constraints**: Each paper must be assigned exactly $b$ eligible reviewers.  
+**Objective**: Minimise the **maximum** number of papers assigned to any single reviewer.
+
 
 ## Mathematical Model
 
