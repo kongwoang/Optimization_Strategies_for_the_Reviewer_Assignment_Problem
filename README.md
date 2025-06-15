@@ -48,7 +48,7 @@ This project implements and compares five optimisation strategies ranging from I
 
 ## Mathematical Model
 
-Let \$x\_{ij}=1\$ if reviewer \$j\$ is assigned to paper \$i\$ and 0 otherwise. Define the maximum load variable \$z\$.
+Let \$x\_{ij}=1\$ if reviewer \$ j \$ is assigned to paper \$ i \$ and 0 otherwise. Define the maximum load variable \$z\$.
 
 ```math
 \min z = \max_{j \in \mathcal R} \sum_{i \in \mathcal P} x_{ij}
